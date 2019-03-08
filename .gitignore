@@ -1,0 +1,11 @@
+.vs
+obj
+bin
+secrets.json
+launchSettings.json
+App_Data
+*.config
+!packages.config
+!*.example.config
+!Escc.Umbraco.Permissions/web.config
+packages

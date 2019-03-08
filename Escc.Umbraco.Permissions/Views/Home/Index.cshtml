@@ -1,0 +1,41 @@
+﻿@model Page
+@{
+    ViewData["Title"] = "Who is responsible for this website page?";
+}
+
+<h1>Who is responsible for this website page?</h1>
+<form asp-controller="Home" asp-action="WhoIsResponsible" method="get">
+    <label asp-for="Url" />
+    <input asp-for="Url" type="url" />
+    <button>Who is responsible?</button>
+</form>
+
+@if (!String.IsNullOrEmpty(Model.Name))
+{
+    <h2>Page details</h2>
+    <p>Name: @Model.Name</p>
+    <p>URL: @Model.Url</p>
+
+    @if (Model.LastEditedBy != null)
+    {
+        <p>Last modified by <a href="@Model.LastEditedBy.UserProfileUrl">@Model.LastEditedBy?.Name</a> at @Model.LastEditedDate.ToString()</p>
+    }
+
+    @if (Model.UsersWithPermissions.Any())
+    { 
+    <h2>Users with update permission</h2>
+    <table>
+        <thead><tr><th>Name</th><th>Email</th></tr></thead>
+        <tbody>
+            @foreach (var user in Model.UsersWithPermissions)
+            {
+                <tr><td><a href="@user.UserProfileUrl">@user.Name</a></td><td><a href="mailto:@user.Email">@user.Email</a></td></tr>
+            }
+        </tbody>
+    </table>
+    }
+    else
+    {
+        <p>There are no web authors for this page. Please <a href="mailto:@Model.WebTeamEmail">email the web team</a>.</p>
+    }
+}
