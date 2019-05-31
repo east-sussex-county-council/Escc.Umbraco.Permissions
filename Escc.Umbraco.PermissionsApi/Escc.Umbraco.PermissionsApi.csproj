@@ -54,7 +54,7 @@
       <HintPath>..\packages\UmbracoCms.Core.7.7.13\lib\net45\controls.dll</HintPath>
     </Reference>
     <Reference Include="Escc.Umbraco, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Escc.Umbraco.7.0.0\lib\net452\Escc.Umbraco.dll</HintPath>
+      <HintPath>..\packages\Escc.Umbraco.7.0.2\lib\net452\Escc.Umbraco.dll</HintPath>
     </Reference>
     <Reference Include="Examine, Version=0.1.89.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Examine.0.1.89\lib\net45\Examine.dll</HintPath>
