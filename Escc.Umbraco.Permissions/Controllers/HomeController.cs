@@ -12,6 +12,8 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using System.Globalization;
+using Escc.EastSussexGovUK.Core;
+using Exceptionless;
 
 namespace Escc.Umbraco.Permissions.Controllers
 {
@@ -19,16 +21,33 @@ namespace Escc.Umbraco.Permissions.Controllers
     {
         private static HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly IEastSussexGovUKTemplateRequest _templateRequest;
+        private readonly IViewModelDefaultValuesProvider _defaultModelValues;
 
-        public HomeController(IConfiguration configuration)
+        public HomeController(IConfiguration configuration, IEastSussexGovUKTemplateRequest templateRequest, IViewModelDefaultValuesProvider defaultModelValues)
         {
             _configuration = configuration;
+            _templateRequest = templateRequest;
+            _defaultModelValues = defaultModelValues;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        [Route("")]
+        public async Task<IActionResult> Index()
         {
-            var model = new Page();
+            var model = new PermissionsViewModel(_defaultModelValues);
+
+            try
+            {
+                // Do this to load the template controls.
+                model.TemplateHtml = await _templateRequest.RequestTemplateHtmlAsync();
+            }
+            catch (Exception ex)
+            {
+                // Catch and report exceptions - don't throw them and cause the page to fail
+                ex.ToExceptionless().Submit();
+            }
+
             return View(model);
         }
 
@@ -39,12 +58,10 @@ namespace Escc.Umbraco.Permissions.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> WhoIsResponsible(string url)
+        [Route("WhoIsResponsible")]
+        public async Task<IActionResult> WhoIsResponsible(string url)
         {
-            var model = new Page
-            {
-                WebTeamEmail = _configuration["Escc:Umbraco:Permissions:WebTeamEmail"]
-            };
+            var model = new PermissionsViewModel(_defaultModelValues);
             if (url != null)
             {
                 if (_httpClient == null)
@@ -55,44 +72,54 @@ namespace Escc.Umbraco.Permissions.Controllers
                 var loginRequest = new LoginRequest { Username = _configuration["Escc:Umbraco:Permissions:UmbracoUsername"], Password = _configuration["Escc:Umbraco:Permissions:UmbracoPassword"] };
                 var loginRequestJson = JsonConvert.SerializeObject(loginRequest);
                 var content = new StringContent(loginRequestJson, Encoding.UTF8, "application/json");
-                var loginResult = await _httpClient.PostAsync(_configuration["Escc:Umbraco:Permissions:UmbracoBaseUrl"]?.TrimEnd('/') + "/umbraco/backoffice/UmbracoApi/Authentication/PostLogin", content);
+                _ = await _httpClient.PostAsync(_configuration["Escc:Umbraco:Permissions:UmbracoBaseUrl"]?.TrimEnd('/') + "/umbraco/backoffice/UmbracoApi/Authentication/PostLogin", content);
 
                 var json = await _httpClient.GetStringAsync(_configuration["Escc:Umbraco:Permissions:UmbracoBaseUrl"]?.TrimEnd('/') + "/umbraco/backoffice/api/permissions/forpage?url=" + HttpUtility.UrlEncode(url));
-                model = JsonConvert.DeserializeObject<Page>(json);
+                model.Page = JsonConvert.DeserializeObject<Page>(json);
 
-                if (model.LastEditedBy != null)
+                if (model.Page != null)
                 {
-                    var administratorGroups = _configuration["Escc:Umbraco:Permissions:HideUsersInTheseGroups"]?.Split(',');
-                    if (administratorGroups != null)
+                    model.Page.WebTeamEmail = _configuration["Escc:Umbraco:Permissions:WebTeamEmail"];
+
+                    if (model.Page.LastEditedBy != null)
                     {
-                        foreach (var group in administratorGroups)
+                        var hiddenGroups = _configuration["Escc:Umbraco:Permissions:HideUsersInTheseGroups"]?.Split(',');
+                        if (hiddenGroups != null)
                         {
-                            if (model.LastEditedBy.GroupNames.Contains(group))
+                            foreach (var group in hiddenGroups)
                             {
-                                model.LastEditedBy = null;
-                                break;
+                                if (model.Page.LastEditedBy.GroupNames.Contains(group))
+                                {
+                                    model.Page.LastEditedBy = null;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    if (model.LastEditedBy != null)
-                    {
-                        model.LastEditedBy.UserProfileUrl = new Uri(string.Format(CultureInfo.InvariantCulture, _configuration["Escc:Umbraco:Permissions:UserProfileUrl"], model.LastEditedBy.Username), UriKind.RelativeOrAbsolute);
+                        if (model.Page.LastEditedBy != null)
+                        {
+                            model.Page.LastEditedBy.UserProfileUrl = new Uri(string.Format(CultureInfo.InvariantCulture, _configuration["Escc:Umbraco:Permissions:UserProfileUrl"], model.Page.LastEditedBy.Username), UriKind.RelativeOrAbsolute);
+                        }
                     }
-                }
-                foreach (var user in model.UsersWithPermissions)
-                {
-                    user.UserProfileUrl = new Uri(string.Format(CultureInfo.InvariantCulture, _configuration["Escc:Umbraco:Permissions:UserProfileUrl"], user.Username), UriKind.RelativeOrAbsolute);
+                    foreach (var user in model.Page.UsersWithPermissions)
+                    {
+                        user.UserProfileUrl = new Uri(string.Format(CultureInfo.InvariantCulture, _configuration["Escc:Umbraco:Permissions:UserProfileUrl"], user.Username), UriKind.RelativeOrAbsolute);
+                    }
                 }
             }
 
-            return View("Index", model);
-        }
+            try
+            {
+                // Do this to load the template controls.
+                model.TemplateHtml = await _templateRequest.RequestTemplateHtmlAsync();
+            }
+            catch (Exception ex)
+            {
+                // Catch and report exceptions - don't throw them and cause the page to fail
+                ex.ToExceptionless().Submit();
+            }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View("Index", model);
         }
     }
 }

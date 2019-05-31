@@ -1,41 +1,53 @@
-﻿@model Page
+﻿@model PermissionsViewModel
 @{
-    ViewData["Title"] = "Who is responsible for this website page?";
+    Model.Metadata.Title = "Who is responsible for this website page?";
+}
+@section Metadata {
+    <link rel="stylesheet" href="@Model.ClientFileBaseUrl/css/min/forms-small.css?v=@Model.ClientFileVersion" />
+    <link rel="stylesheet" href="@Model.ClientFileBaseUrl/css/min/forms-medium.css?v=@Model.ClientFileVersion" media="@Model.MediaQueryMedium" />
+    <link rel="stylesheet" href="@Model.ClientFileBaseUrl/css/min/forms-large.css?v=@Model.ClientFileVersion" media="@Model.MediaQueryLarge" />
+    <link rel="stylesheet" href="~/css/app.css?v=@Model.ClientFileVersion" />
 }
 
-<h1>Who is responsible for this website page?</h1>
-<form asp-controller="Home" asp-action="WhoIsResponsible" method="get">
-    <label asp-for="Url" />
-    <input asp-for="Url" type="url" />
-    <button>Who is responsible?</button>
-</form>
+<div class="full-page">
+    <div class="text-content content">
+        <h1>Who is responsible for this website page?</h1>
+        <form asp-controller="Home" asp-action="WhoIsResponsible" method="get" class="form short-form">
+            <div>
+                <label asp-for="Page.Url" />
+                <input asp-for="Page.Url" type="text" name="url" required="required" />
+                <input type="submit" value="Who is responsible?" />
+            </div>
+        </form>
 
-@if (!String.IsNullOrEmpty(Model.Name))
-{
-    <h2>Page details</h2>
-    <p>Name: @Model.Name</p>
-    <p>URL: @Model.Url</p>
+        @if (Model.Page != null && !String.IsNullOrEmpty(Model.Page.Name))
+        {
+            <h2>Page details</h2>
+            <p>Name: @Model.Page.Name</p>
+            <p>URL: @Model.Page.Url</p>
 
-    @if (Model.LastEditedBy != null)
-    {
-        <p>Last modified by <a href="@Model.LastEditedBy.UserProfileUrl">@Model.LastEditedBy?.Name</a> at @Model.LastEditedDate.ToString()</p>
-    }
-
-    @if (Model.UsersWithPermissions.Any())
-    { 
-    <h2>Users with update permission</h2>
-    <table>
-        <thead><tr><th>Name</th><th>Email</th></tr></thead>
-        <tbody>
-            @foreach (var user in Model.UsersWithPermissions)
+            @if (Model.Page.LastEditedBy != null)
             {
-                <tr><td><a href="@user.UserProfileUrl">@user.Name</a></td><td><a href="mailto:@user.Email">@user.Email</a></td></tr>
+                <p>Last modified by <a href="@Model.Page.LastEditedBy.UserProfileUrl">@Model.Page.LastEditedBy?.Name</a> at @Model.Page.LastEditedDate.ToString()</p>
             }
-        </tbody>
-    </table>
-    }
-    else
-    {
-        <p>There are no web authors for this page. Please <a href="mailto:@Model.WebTeamEmail">email the web team</a>.</p>
-    }
-}
+
+            @if (Model.Page.UsersWithPermissions.Any())
+            {
+                <h2>Users with update permission</h2>
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th></tr></thead>
+                    <tbody>
+                        @foreach (var user in Model.Page.UsersWithPermissions)
+                        {
+                            <tr><td><a href="@user.UserProfileUrl">@user.Name</a></td><td><a href="mailto:@user.Email">@user.Email</a></td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>There are no web authors for this page. Please <a href="mailto:@Model.Page.WebTeamEmail">email the web team</a>.</p>
+            }
+        }
+    </div>
+</div>

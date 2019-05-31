@@ -3,18 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <MvcRazorExcludeRefAssembliesFromPublish>false</MvcRazorExcludeRefAssembliesFromPublish>
     <UserSecretsId>67af997d-3218-4776-b61f-830d4a987a67</UserSecretsId>
   </PropertyGroup>
 
 
   <ItemGroup>
+    <PackageReference Include="Escc.EastSussexGovUK" Version="15.0.1" />
+    <PackageReference Include="Escc.EastSussexGovUK.Core" Version="1.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

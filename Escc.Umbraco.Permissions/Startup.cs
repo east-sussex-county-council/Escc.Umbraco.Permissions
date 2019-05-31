@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Escc.EastSussexGovUK.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -23,36 +24,15 @@ namespace Escc.Umbraco.Permissions
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddHsts(options =>
-            {
-                options.Preload = false;
-                options.IncludeSubDomains = false;
-                options.MaxAge = TimeSpan.FromDays(365);
-            });
+            services.AddEastSussexGovUK(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            app.UseHsts();
-            app.UseHttpsRedirection();
+            app.UseEastSussexGovUK(env);
             app.UseStaticFiles();
-
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}");
-            });
+            app.UseMvc();
         }
     }
 }
