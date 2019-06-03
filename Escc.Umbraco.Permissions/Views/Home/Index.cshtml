@@ -24,7 +24,10 @@
         {
             <h2>Page details</h2>
             <p>Name: @Model.Page.Name</p>
+            @if (Model.Page.Url != null)
+            {
             <p>URL: @Model.Page.Url</p>
+            }
 
             @if (Model.Page.LastEditedBy != null)
             {

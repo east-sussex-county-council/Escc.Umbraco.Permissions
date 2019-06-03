@@ -82,7 +82,10 @@ namespace Escc.Umbraco.Permissions.Controllers
 
                 if (model.Page != null)
                 {
-                    model.Page.Url = new Uri(model.Page.Url.ToString().Replace(permissionsApiUrl, publishedContentUrl));
+                    if (model.Page.Url != null && model.Page.Url.IsAbsoluteUri && !String.IsNullOrEmpty(publishedContentUrl))
+                    {
+                        model.Page.Url = new Uri(model.Page.Url.ToString().Replace(permissionsApiUrl, publishedContentUrl));
+                    }
                     model.Page.WebTeamEmail = _configuration["Escc:Umbraco:Permissions:WebTeamEmail"];
 
                     if (model.Page.LastEditedBy != null)
