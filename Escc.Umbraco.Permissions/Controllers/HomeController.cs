@@ -83,17 +83,9 @@ namespace Escc.Umbraco.Permissions.Controllers
 
                     if (model.Page.LastEditedBy != null)
                     {
-                        var hiddenGroups = _configuration["Escc:Umbraco:Permissions:HideUsersInTheseGroups"]?.Split(',');
-                        if (hiddenGroups != null)
+                        if (UserIsInHiddenGroup(model.Page.LastEditedBy))
                         {
-                            foreach (var group in hiddenGroups)
-                            {
-                                if (model.Page.LastEditedBy.GroupNames.Contains(group))
-                                {
-                                    model.Page.LastEditedBy = null;
-                                    break;
-                                }
-                            }
+                            model.Page.LastEditedBy = null;
                         }
 
                         if (model.Page.LastEditedBy != null)
@@ -101,10 +93,16 @@ namespace Escc.Umbraco.Permissions.Controllers
                             model.Page.LastEditedBy.UserProfileUrl = new Uri(string.Format(CultureInfo.InvariantCulture, _configuration["Escc:Umbraco:Permissions:UserProfileUrl"], model.Page.LastEditedBy.Username), UriKind.RelativeOrAbsolute);
                         }
                     }
+                    var usersToShow = new List<User>();
                     foreach (var user in model.Page.UsersWithPermissions)
                     {
-                        user.UserProfileUrl = new Uri(string.Format(CultureInfo.InvariantCulture, _configuration["Escc:Umbraco:Permissions:UserProfileUrl"], user.Username), UriKind.RelativeOrAbsolute);
+                        if (!UserIsInHiddenGroup(user))
+                        {
+                            user.UserProfileUrl = new Uri(string.Format(CultureInfo.InvariantCulture, _configuration["Escc:Umbraco:Permissions:UserProfileUrl"], user.Username), UriKind.RelativeOrAbsolute);
+                            usersToShow.Add(user);
+                        }
                     }
+                    model.Page.UsersWithPermissions = usersToShow;
                 }
             }
 
@@ -120,6 +118,22 @@ namespace Escc.Umbraco.Permissions.Controllers
             }
 
             return View("Index", model);
+        }
+
+        private bool UserIsInHiddenGroup(User user)
+        {
+            var hiddenGroups = _configuration["Escc:Umbraco:Permissions:HideUsersInTheseGroups"]?.Split(',');
+            if (hiddenGroups != null)
+            {
+                foreach (var group in hiddenGroups)
+                {
+                    if (user.GroupNames.Contains(group))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }
