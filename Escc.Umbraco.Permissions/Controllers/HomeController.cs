@@ -69,16 +69,20 @@ namespace Escc.Umbraco.Permissions.Controllers
                     _httpClient = new HttpClient(new HttpClientHandler());
                 }
 
+                var permissionsApiUrl = _configuration["Escc:Umbraco:Permissions:PermissionsApiBaseUrl"]?.TrimEnd('/');
+                var publishedContentUrl = _configuration["Escc:Umbraco:Permissions:PublishedContentBaseUrl"]?.TrimEnd('/');
+
                 var loginRequest = new LoginRequest { Username = _configuration["Escc:Umbraco:Permissions:UmbracoUsername"], Password = _configuration["Escc:Umbraco:Permissions:UmbracoPassword"] };
                 var loginRequestJson = JsonConvert.SerializeObject(loginRequest);
                 var content = new StringContent(loginRequestJson, Encoding.UTF8, "application/json");
-                _ = await _httpClient.PostAsync(_configuration["Escc:Umbraco:Permissions:UmbracoBaseUrl"]?.TrimEnd('/') + "/umbraco/backoffice/UmbracoApi/Authentication/PostLogin", content);
+                _ = await _httpClient.PostAsync(permissionsApiUrl + "/umbraco/backoffice/UmbracoApi/Authentication/PostLogin", content);
 
-                var json = await _httpClient.GetStringAsync(_configuration["Escc:Umbraco:Permissions:UmbracoBaseUrl"]?.TrimEnd('/') + "/umbraco/backoffice/api/permissions/forpage?url=" + HttpUtility.UrlEncode(url));
+                var json = await _httpClient.GetStringAsync(permissionsApiUrl + "/umbraco/backoffice/api/permissions/forpage?url=" + HttpUtility.UrlEncode(url));
                 model.Page = JsonConvert.DeserializeObject<Page>(json);
 
                 if (model.Page != null)
                 {
+                    model.Page.Url = new Uri(model.Page.Url.ToString().Replace(permissionsApiUrl, publishedContentUrl));
                     model.Page.WebTeamEmail = _configuration["Escc:Umbraco:Permissions:WebTeamEmail"];
 
                     if (model.Page.LastEditedBy != null)
